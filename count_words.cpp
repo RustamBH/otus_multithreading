@@ -40,14 +40,14 @@ int main(int argc, char* argv[]) {
         tasks.emplace_back(std::async(std::launch::async, count_words, std::ref(input), std::ref(freq_dict)));  
     }
     
-    bool success = true;
+    //bool success = true;
     for (auto& task : tasks) {
         try {
             task.get();
         }
         catch (std::exception& e) {
             std::cerr << "Error: " << e.what() << std::endl;
-            success = false;
+            //success = false;
         }
     }
 
