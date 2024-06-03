@@ -44,6 +44,13 @@ int main(int argc, char* argv[]) {
     
     for (auto& task : tasks) {
         try {
+            if (task.wait_for(std::chrono::milliseconds(50)) != std::future_status::deferred)
+            {
+                while (task.wait_for(std::chrono::milliseconds(50)) != std::future_status::ready)
+                {
+                    std::cout << "Waiting" << std::endl;
+                }
+            }
             task.get();
         }
         catch (std::exception& e) {
