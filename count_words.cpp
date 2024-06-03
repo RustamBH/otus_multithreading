@@ -30,31 +30,31 @@ int main(int argc, char* argv[]) {
     auto start = std::chrono::high_resolution_clock::now();
     Counter freq_dict;
     std::vector<std::future<void>> tasks;
+    std::vector<std::unique_ptr<std::ifstream>> files;    
 
-    for (int i = 1; i < argc; ++i) {
-        std::ifstream input{ argv[i] };
-        if (!input.is_open()) {
+    for (int i = 1; i < argc; ++i) {        
+        std::unique_ptr<std::ifstream> input(std::make_unique<std::ifstream>(argv[i]));
+        files.emplace_back(std::move(input));
+        if (!files[i-1]->is_open()) {
             std::cerr << "Failed to open file " << argv[i] << '\n';
             return EXIT_FAILURE;
         }  
-        tasks.emplace_back(std::async(std::launch::async, count_words, std::ref(input), std::ref(freq_dict)));  
-    }
+        tasks.emplace_back(std::async(std::launch::async, count_words, std::ref(*files[i-1]), std::ref(freq_dict)));  
+    }    
     
-    //bool success = true;
     for (auto& task : tasks) {
         try {
             task.get();
         }
         catch (std::exception& e) {
-            std::cerr << "Error: " << e.what() << std::endl;
-            //success = false;
+            std::cerr << "Error: " << e.what() << std::endl;            
         }
     }
 
-    //print_topk(std::cout, freq_dict, TOPK);
-    std::future<void> async_policy =
-        std::async(std::launch::async, print_topk, std::ref(std::cout), std::ref(freq_dict), TOPK);
-    async_policy.get();
+    print_topk(std::cout, freq_dict, TOPK);
+    //std::future<void> async_policy =
+        //std::async(std::launch::async, print_topk, std::ref(std::cout), std::ref(freq_dict), TOPK);
+    //async_policy.get();
     auto end = std::chrono::high_resolution_clock::now();
     auto elapsed_ms = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
     std::cout << "Elapsed time is " << elapsed_ms.count() << " us\n";
@@ -74,7 +74,7 @@ std::string tolower(const std::string& str) {
 
 void count_words(std::istream& stream, Counter& counter) {
     std::mutex m_mutex;
-    std::lock_guard<std::mutex> lck{ m_mutex };    
+    std::lock_guard<std::mutex> lck{ m_mutex };
     std::for_each(std::istream_iterator<std::string>(stream),
         std::istream_iterator<std::string>(),
         [&counter](const std::string& s) { ++counter[tolower(s)]; });
@@ -83,10 +83,10 @@ void count_words(std::istream& stream, Counter& counter) {
 
 
 void print_topk(std::ostream& stream, const Counter& counter, const size_t k) {
-    std::mutex m_mutex;
     std::vector<Counter::const_iterator> words;
     words.reserve(counter.size());
-    std::lock_guard<std::mutex> lck{ m_mutex };
+    //std::mutex m_mutex;
+    //std::lock_guard<std::mutex> lck{ m_mutex };
     for (auto it = std::cbegin(counter); it != std::cend(counter); ++it) {
         words.push_back(it);
     }
