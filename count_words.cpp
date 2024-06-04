@@ -58,6 +58,11 @@ int main(int argc, char* argv[]) {
         }
     }
 
+    for (size_t i = 0; i < files.size(); ++i) {
+        if (files[i]->is_open())
+            files[i]->close();
+    }
+    
     print_topk(std::cout, freq_dict, TOPK);
     //std::future<void> async_policy =
         //std::async(std::launch::async, print_topk, std::ref(std::cout), std::ref(freq_dict), TOPK);
