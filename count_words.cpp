@@ -75,8 +75,6 @@ int main(int argc, char* argv[]) {
 
 std::string tolower(const std::string& str) {
     std::string lower_str;
-    //std::mutex m_mutex;
-    //std::lock_guard<std::mutex> lck{ m_mutex };
     std::transform(std::cbegin(str), std::cend(str),
         std::back_inserter(lower_str),
         [](unsigned char ch) { return std::tolower(ch); });
